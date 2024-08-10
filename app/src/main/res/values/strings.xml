@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Meditation</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="name">Name</string>
+    <string name="age">Age</string>
+    <string name="cnic">CNIC</string>
+    <string name="disease">Disease</string>
+    <string name="register">Register</string>
+    <string name="welcome_to_meditation">Welcome To Meditation</string>
+    <string name="login">Login</string>
+    <string name="pass">Password</string>
+</resources>
