@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.ar.meditation.DataBase.SignupDatabase
@@ -22,6 +23,9 @@ import com.ar.utils.Utilsprogressbar
 import com.kaopiz.kprogresshud.KProgressHUD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -59,19 +63,32 @@ class Signup : Fragment() {
         val cnic = binding.cnicInput.text.toString()
 
         CoroutineScope(Dispatchers.IO).launch {
-            val user = signupViewModel.getSignupByCnic(cnic)
+            val userLiveData = signupViewModel.getSignupByCnic(cnic)
+
             withContext(Dispatchers.Main) {
-                kProgressHUD.dismiss()
-                if (user != null) {
-                    Toast.makeText(requireContext(), "This CNIC already exists in the database, please login", Toast.LENGTH_SHORT).show()
-                } else {
-                    dataToDatabase()
+                val observer = Observer<List<SignupModel>> { userList ->
+                    kProgressHUD.dismiss()
+                    val exists = userList?.any { it.cnic == cnic } == true
+                    if (exists) {
+                        Toast.makeText(
+                            requireContext(),
+                            "This CNIC already exists in the database, please login",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        dataToDatabase()
+                    }
                 }
+                userLiveData.removeObserver(observer)
+
+                userLiveData.observe(viewLifecycleOwner, observer)
             }
         }
     }
 
-    private fun dataToDatabase() {
+
+
+     fun dataToDatabase() {
         val signupData = SignupModel(
             cnic = binding.cnicInput.text.toString(),
             name = binding.nameInput.text.toString(),
@@ -86,6 +103,7 @@ class Signup : Fragment() {
                 kProgressHUD.dismiss()
                 Toast.makeText(requireContext(), "Successfully Registered", Toast.LENGTH_SHORT).show()
                 requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
+                requireActivity().finish()
             }
         }
     }

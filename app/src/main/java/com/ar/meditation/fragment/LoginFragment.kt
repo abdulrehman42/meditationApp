@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import com.ar.meditation.DataBase.SignupDatabase
@@ -69,15 +70,27 @@ class LoginFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             val user = signupViewModel.getSignupByCnicAndPass(cnic, pass)
             withContext(Dispatchers.Main) {
-                kProgressHUD.dismiss()
-                if (user != null) {
-                    requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
-                } else {
-                    Toast.makeText(
-                        requireContext(), "Invalid CNIC or password. Please try again.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                val observer = Observer<List<SignupModel>> { userList ->
+                    kProgressHUD.dismiss()
+                    val exists = userList?.any { it.cnic == cnic } == true
+                    if (exists) {
+                        requireActivity().startActivity(
+                            Intent(
+                                requireActivity(),
+                                MainActivity::class.java
+                            )
+                        )
+                    } else {
+                        Toast.makeText(
+                            requireContext(), "Invalid CNIC or Password. Please try again.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
                 }
+                user.removeObserver(observer)
+
+                user.observe(viewLifecycleOwner, observer)
             }
         }
     }
