@@ -32,7 +32,6 @@ import java.util.List;
 
 public class LoginFragmentScreen extends Fragment {
     private FragmentLoginBinding binding;
-
     private KProgressHUD kProgressHUD;
     private SignupViewModel signupViewModel;
 
