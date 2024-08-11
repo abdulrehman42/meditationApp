@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/background"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".fragment.Signup">
+    tools:context=".fragment.SignupScreenFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constrait"
@@ -62,6 +62,7 @@
             android:id="@+id/name_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:singleLine="true"
             android:hint="@string/name" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -80,6 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="numberDecimal"
+            android:singleLine="true"
             android:hint="@string/age" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -98,6 +100,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="numberDecimal"
+            android:singleLine="true"
             android:hint="@string/cnic" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -115,6 +118,7 @@
             android:id="@+id/disease_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:singleLine="true"
             android:hint="@string/disease" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -132,6 +136,7 @@
             android:id="@+id/pass_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:singleLine="true"
             android:hint="@string/pass" />
     </com.google.android.material.textfield.TextInputLayout>
 
