@@ -6,12 +6,12 @@
     app:startDestination="@id/authLoginFragment">
     <fragment
         android:id="@+id/authLoginFragment"
-        android:name="com.ar.meditation.fragment.LoginFragment"
+        android:name="com.ar.meditation.fragment.LoginScreen"
         android:label="fragment_auth_home"
         tools:layout="@layout/fragment_login" />
     <fragment
         android:id="@+id/authsignupFragment"
-        android:name="com.ar.meditation.fragment.Signup"
+        android:name="com.ar.meditation.fragment.SignupScreen"
         android:label="fragment_auth_home"
         tools:layout="@layout/fragment_signup" />
 </navigation>
