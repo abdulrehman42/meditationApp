@@ -1,9 +1,14 @@
 package com.ar.meditation.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "signup_table")
 data class SignupModel(
-    val name: String = "",
-    val age: String = "",
-    val cnic: String = "",
-    val diseases: String = "",
-    val pass: String = ""
+    @PrimaryKey(autoGenerate = true) var id: Int = 0,
+    var name: String = "",
+    var age: String = "",
+    var cnic: String = "",
+    var diseases: String = "",
+    var pass: String = ""
 )

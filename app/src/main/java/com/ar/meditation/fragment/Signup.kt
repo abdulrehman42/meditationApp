@@ -8,136 +8,119 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
+import com.ar.meditation.DataBase.SignupDatabase
 import com.ar.meditation.R
 import com.ar.meditation.activity.MainActivity
 import com.ar.meditation.databinding.FragmentSignupBinding
 import com.ar.meditation.model.SignupModel
+import com.ar.meditation.repository.SignupRepository
+import com.ar.meditation.viewmodel.SignupViewModel
+import com.ar.meditation.viewmodel.SignupViewModelFactory
 import com.ar.utils.Utilsprogressbar
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.kaopiz.kprogresshud.KProgressHUD
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class Signup : Fragment() {
-    lateinit var referrence:DatabaseReference
-    lateinit var binding: FragmentSignupBinding
-    lateinit var kProgressHUD:KProgressHUD
-
+    private lateinit var binding: FragmentSignupBinding
+    private lateinit var kProgressHUD: KProgressHUD
+    private lateinit var signupViewModel: SignupViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding=FragmentSignupBinding.inflate(layoutInflater)
-        kProgressHUD= Utilsprogressbar.showProgressDialog(requireActivity())
-        referrence = FirebaseDatabase.getInstance().reference
+        binding = FragmentSignupBinding.inflate(inflater, container, false)
+        kProgressHUD = Utilsprogressbar.showProgressDialog(requireActivity())
+
+        val dao = SignupDatabase.getDatabase(requireContext()).signupDao()
+        val repository = SignupRepository(dao)
+        signupViewModel = ViewModelProvider(requireActivity(), SignupViewModelFactory(repository)).get(
+            SignupViewModel::class.java)
+
         init_view()
         binding.signinSide.setOnClickListener {
             replaceFragment(R.id.authLoginFragment)
         }
         binding.signupBt.setOnClickListener {
             kProgressHUD.show()
-            if (validation()){
+            if (validation()) {
                 checkUserExist()
-                //dataToFirebase()
             }
         }
         return binding.root
-
     }
-    fun checkUserExist(){
-        referrence.database.getReference("User").child(binding.cnicInput.text.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                try {
-                    if (dataSnapshot.exists()) {
-                        kProgressHUD.dismiss()
-                        Toast.makeText(requireContext(),"this email exist in database please login",Toast.LENGTH_SHORT).show()
-                    } else {
-                        dataToFirebase()
-                    }
-                }catch (e:Exception)
-                {
-                    dataToFirebase()
+
+    private fun checkUserExist() {
+        val cnic = binding.cnicInput.text.toString()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val user = signupViewModel.getSignupByCnic(cnic)
+            withContext(Dispatchers.Main) {
+                kProgressHUD.dismiss()
+                if (user != null) {
+                    Toast.makeText(requireContext(), "This CNIC already exists in the database, please login", Toast.LENGTH_SHORT).show()
+                } else {
+                    dataToDatabase()
                 }
-
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle possible errors
-                println("Error checking value: ${databaseError.message}")
-            }
-        })
-    }
-
-    private fun dataToFirebase() {
-        val signupData=SignupModel(binding.nameInput.text.toString(),binding.ageInput.text.toString(),binding.cnicInput.text.toString(),binding.diseaseInput.text.toString(),binding.passInput.text.toString())
-        referrence.child("User").child(binding.cnicInput.text.toString()).setValue(signupData).addOnCompleteListener {
-            kProgressHUD.dismiss()
-            if (it.isSuccessful)
-            {
-                Toast.makeText(requireContext(),"Successfully Register",Toast.LENGTH_SHORT).show()
-                requireActivity().startActivity(Intent(requireActivity(),MainActivity::class.java))
-            }
-            else
-            {
-                Toast.makeText(requireContext(),"something went wrong",Toast.LENGTH_SHORT).show()
-
             }
         }
     }
 
-    private fun validation():Boolean {
+    private fun dataToDatabase() {
+        val signupData = SignupModel(
+            cnic = binding.cnicInput.text.toString(),
+            name = binding.nameInput.text.toString(),
+            age = binding.ageInput.text.toString(),
+            diseases = binding.diseaseInput.text.toString(),
+            pass = binding.passInput.text.toString()
+        )
 
-        if (binding.nameInput.text!!.length<3)
-        {
-            kProgressHUD.dismiss()
-            binding.nameInputlayout.error="Enter Your Full Name"
-            return false
+        CoroutineScope(Dispatchers.IO).launch {
+            signupViewModel.insert(signupData)
+            withContext(Dispatchers.Main) {
+                kProgressHUD.dismiss()
+                Toast.makeText(requireContext(), "Successfully Registered", Toast.LENGTH_SHORT).show()
+                requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
+            }
         }
-        if (binding.cnicInput.text!!.length<13)
-        {
-            kProgressHUD.dismiss()
-
-            binding.cnicInputlayout.error="Enter Your Correct CNIC Number"
-            return false
-        }
-        if (binding.passInput.text!!.length<6)
-        {
-            kProgressHUD.dismiss()
-
-            binding.passInputlayout.error="Enter at least 6 digit password"
-            return false
-        }
-        if (binding.passInput.text.isNullOrEmpty())
-        {
-            kProgressHUD.dismiss()
-
-            binding.passInputlayout.error="Enter Your Age"
-            return false
-        }
-        if (binding.diseaseInput.text.isNullOrEmpty())
-        {
-            kProgressHUD.dismiss()
-
-            binding.diseaseInputlayout.error="Enter Your disease"
-            return false
-        }
-        else{
-            return true
-        }
-
     }
-    fun replaceFragment(fragment: Int) {
+
+    private fun validation(): Boolean {
+        if (binding.nameInput.text!!.length < 3) {
+            kProgressHUD.dismiss()
+            binding.nameInputlayout.error = "Enter Your Full Name"
+            return false
+        }
+        if (binding.cnicInput.text!!.length < 13) {
+            kProgressHUD.dismiss()
+            binding.cnicInputlayout.error = "Enter Your Correct CNIC Number"
+            return false
+        }
+        if (binding.passInput.text!!.length < 6) {
+            kProgressHUD.dismiss()
+            binding.passInputlayout.error = "Enter at least 6 digit password"
+            return false
+        }
+        if (binding.diseaseInput.text.isNullOrEmpty()) {
+            kProgressHUD.dismiss()
+            binding.diseaseInputlayout.error = "Enter Your Disease"
+            return false
+        }
+        return true
+    }
+
+    private fun replaceFragment(fragment: Int) {
         Navigation.findNavController(requireActivity(), R.id.authHostFragment).navigate(fragment, null)
     }
+
     private fun init_view() {
         val next = "<font color='#303030'> Don't have an account? </font>"
         val second = "<font color='#793397'> Signin</font>"
         binding.signinSide.text = Html.fromHtml(next + second)
     }
-
-
 }
